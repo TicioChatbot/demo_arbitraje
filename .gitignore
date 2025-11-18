@@ -1,0 +1,53 @@
+# --- Python / entorno ---------------------------------------
+
+__pycache__/
+*.py[cod]
+*$py.class
+Lib/
+Scripts/
+Include/
+pyvenv
+
+
+# Entornos virtuales
+venv/
+.venv/
+env/
+.env/
+
+# Archivos de configuración locales
+*.env
+*.env.*
+.envrc
+
+# --- Flask / proyecto web -----------------------------------
+
+# Base de datos SQLite (generada en local)
+cases.db
+
+# Archivos de logs
+*.log
+logs/
+*.pid
+
+# Archivos temporales
+*.tmp
+*.temp
+*.swp
+*.swo
+
+
+# --- Herramientas varias ------------------------------------
+
+# VS Code
+.vscode/
+
+# PyCharm / IntelliJ
+.idea/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+desktop.ini
