@@ -10,7 +10,7 @@ from flask import (
     jsonify,
 )
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 
 app = Flask(__name__)
 
@@ -725,19 +725,20 @@ def search():
 
     query = Case.query
 
-    # Búsqueda por palabra clave general: radicado, título, contenido, etiqueta, árbitro, keywords
+    # ---------- BÚSQUEDA GENERAL (q) - CASE INSENSITIVE ----------
     if q:
-        pattern = f"%{q}%"
+        q_norm = q.lower()
+        pattern = f"%{q_norm}%"
         query = (
             query.outerjoin(Case.tags)
             .filter(
                 or_(
-                    Case.title.ilike(pattern),
-                    Case.content.ilike(pattern),
-                    Case.radicado.ilike(pattern),
-                    Case.arbiter.ilike(pattern),
-                    Case.keywords.ilike(pattern),
-                    Tag.name.ilike(pattern),
+                    func.lower(Case.title).like(pattern),
+                    func.lower(Case.content).like(pattern),
+                    func.lower(Case.radicado).like(pattern),
+                    func.lower(Case.arbiter).like(pattern),
+                    func.lower(Case.keywords).like(pattern),
+                    func.lower(Tag.name).like(pattern),
                 )
             )
             .distinct()
@@ -747,17 +748,19 @@ def search():
     if selected_tag_ids:
         query = query.filter(Case.tags.any(Tag.id.in_(selected_tag_ids)))
 
-    # Filtro por palabra clave temática (una palabra, pero si meten más igual funciona)
+    # ---------- FILTRO POR PALABRA CLAVE TEMÁTICA ----------
     if keyword_filter:
-        kw_pattern = f"%{keyword_filter}%"
-        query = query.filter(Case.keywords.ilike(kw_pattern))
+        kw_norm = keyword_filter.lower()
+        kw_pattern = f"%{kw_norm}%"
+        query = query.filter(func.lower(Case.keywords).like(kw_pattern))
 
-    # Filtro por árbitro / tribunal
+    # ---------- FILTRO POR ÁRBITRO / TRIBUNAL ----------
     if arbiter_filter:
-        arb_pattern = f"%{arbiter_filter}%"
-        query = query.filter(Case.arbiter.ilike(arb_pattern))
+        arb_norm = arbiter_filter.lower()
+        arb_pattern = f"%{arb_norm}%"
+        query = query.filter(func.lower(Case.arbiter).like(arb_pattern))
 
-    # Filtro por rango de fechas
+    # ---------- FILTRO POR RANGO DE FECHAS ----------
     date_from = None
     date_to = None
     if date_from_str:
