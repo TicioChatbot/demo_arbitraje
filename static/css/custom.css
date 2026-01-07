@@ -1,0 +1,431 @@
+/* custom.css - Official Cámara de Comercio de Medellín Identity & Polish */
+
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700;800&display=swap');
+
+:root {
+    --brand-red: #da291c;
+    --brand-black: #2B2B2B;
+    --brand-dark-grey: #333333;
+    --text-main: #333333;
+    --glass-border: rgba(255, 255, 255, 0.5);
+    /* Increased visibility */
+    --glass-bg: rgba(255, 255, 255, 0.15);
+}
+
+body {
+    font-family: 'Open Sans', sans-serif;
+    color: var(--text-main);
+    background-color: #ffffff;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.hero-title {
+    font-family: 'Open Sans', sans-serif;
+}
+
+/* Navbar */
+.uk-navbar-container {
+    background: #fff;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.uk-navbar-nav>li>a {
+    font-family: 'Open Sans', sans-serif;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--brand-black);
+}
+
+.uk-navbar-nav>li>a:hover {
+    color: var(--brand-red);
+}
+
+.logo-text {
+    font-family: 'Open Sans', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--brand-black);
+    line-height: 1.2;
+    text-transform: uppercase;
+}
+
+/* Hero Section */
+.hero-section {
+    background-color: var(--brand-red);
+    padding: 60px 0 100px 0;
+    background: linear-gradient(180deg, #da291c 0%, #c41e11 100%);
+    color: white;
+    text-align: center;
+}
+
+.hero-title {
+    color: white !important;
+    font-weight: 800;
+    font-size: 2.8rem;
+    margin-bottom: 10px;
+}
+
+.hero-subtitle {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1.25rem;
+    margin-bottom: 50px;
+    font-weight: 400;
+}
+
+/* Search Box (The Big White Pill) */
+.search-container {
+    background: white;
+    padding: 5px 8px 5px 25px;
+    border-radius: 50px;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.search-input {
+    border: none;
+    font-size: 1.1rem;
+    padding: 15px 0;
+    flex-grow: 1;
+    outline: none;
+    font-family: 'Open Sans', sans-serif;
+    color: #444;
+}
+
+.search-input::placeholder {
+    color: #999;
+    font-weight: 300;
+}
+
+.search-btn {
+    background-color: var(--brand-black);
+    color: white;
+    width: 48px;
+    height: 48px;
+    border: none;
+    cursor: pointer;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s, background 0.2s;
+    flex-shrink: 0;
+}
+
+.search-btn:hover {
+    background-color: #000;
+    transform: scale(1.05);
+}
+
+/* Filters Row */
+.filters-row {
+    margin-top: 25px;
+    max-width: 900px;
+    /* Constrain overall width slightly */
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.filters-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 15px;
+    width: 100%;
+}
+
+@media (min-width: 640px) {
+    .filters-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 30px;
+        /* significantly larger gap */
+    }
+}
+
+/* Glassy Inputs */
+.glass-input {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 6px;
+    color: white;
+    height: 40px;
+    /* Smaller height */
+    padding: 0 12px;
+    width: 95%;
+    /* Force gap by not taking full cell width */
+    margin: 0 auto;
+    /* Center in cell */
+    display: block;
+    font-size: 0.9rem;
+    /* Smaller text */
+    transition: all 0.2s;
+}
+
+.glass-input::placeholder {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.glass-input:focus {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: white;
+    outline: none;
+    color: white;
+}
+
+select.glass-input {
+    appearance: none;
+    /* Remove default arrow to style cleaner if desired, but keeping default is safer for functionality unless we add icon */
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 16px;
+}
+
+select.glass-input option {
+    color: #333;
+}
+
+/* Tags Modal & Alpha Nav */
+#tags-modal .uk-modal-dialog {
+    width: 900px;
+    max-width: 95vw;
+    border-radius: 8px;
+    overflow: hidden;
+    height: 80vh;
+    /* Fixed height for Scrolling content */
+    display: flex;
+    flex-direction: column;
+}
+
+#tags-modal .uk-modal-body {
+    padding: 0;
+    flex-grow: 1;
+    overflow-y: hidden;
+    /* We'll scroll the content area specifically */
+    display: flex;
+    flex-direction: column;
+}
+
+.alpha-nav {
+    background: #f8f9fa;
+    border-bottom: 1px solid #ddd;
+    padding: 10px 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.alpha-nav a {
+    color: var(--brand-black);
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-decoration: none;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.alpha-nav a:hover,
+.alpha-nav a.active {
+    background-color: var(--brand-red);
+    color: white;
+}
+
+.alpha-nav a.disabled {
+    color: #ccc;
+    pointer-events: none;
+    background: transparent;
+}
+
+.tags-scroll-container {
+    padding: 30px;
+    overflow-y: auto;
+    flex-grow: 1;
+    /* Remove smooth scroll if it feels sluggish for users with large lists */
+    scroll-behavior: auto;
+}
+
+.tag-group-section {
+    margin-bottom: 30px;
+    scroll-margin-top: 100px;
+    /* offset for sticky headers */
+}
+
+.tag-group-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--brand-red);
+    border-bottom: 2px solid #eee;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+    position: sticky;
+    top: 0;
+    /* Ideally stick within scroll container, usage might vary */
+}
+
+/* Tag Checkbox Styling */
+.tag-item-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 4px;
+    transition: background 0.1s;
+}
+
+.tag-item-label:hover {
+    background: #f5f5f5;
+}
+
+.tag-item-label input[type="checkbox"] {
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border: 2px solid #ccc;
+    border-radius: 3px;
+    cursor: pointer;
+    position: relative;
+}
+
+.tag-item-label input[type="checkbox"]:checked {
+    background-color: var(--brand-red);
+    border-color: var(--brand-red);
+}
+
+.tag-item-label input[type="checkbox"]:checked::after {
+    content: '✔';
+    color: white;
+    font-size: 12px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Filter Dropdown (Tags) */
+.filter-dropdown-btn {
+    color: white;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    padding: 10px 20px;
+    border-radius: 50px;
+    background: rgba(255, 255, 255, 0.1);
+    transition: all 0.2s;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.filter-dropdown-btn:hover,
+.filter-dropdown-btn[aria-expanded="true"] {
+    background: white;
+    color: var(--brand-red);
+    border-color: white;
+}
+
+.custom-dropdown {
+    min-width: 300px;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+    border: 1px solid #eee;
+}
+
+/* Custom Sort Select */
+.sort-select-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.sort-label {
+    color: #999;
+    font-size: 0.9rem;
+}
+
+.sort-select {
+    border: none;
+    background: transparent;
+    font-weight: 700;
+    color: var(--brand-black);
+    font-size: 0.95rem;
+    cursor: pointer;
+    outline: none;
+    padding-right: 15px;
+    /* Minimal padding */
+    appearance: none;
+    /* Remove default arrow */
+    /* Add custom simple arrow or leave text only if preferred, screenshot suggests text flow */
+}
+
+/* Results */
+.result-card {
+    background: white;
+    border: 1px solid #e0e0e0;
+    /* Outline Card */
+    border-radius: 8px;
+    padding: 25px;
+    margin-bottom: 25px;
+    /* Proper spacing between cards */
+    transition: all 0.2s ease-in-out;
+}
+
+.result-card:hover {
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    /* Lift effect */
+    border-color: #d0d0d0;
+}
+
+.result-title a {
+    color: var(--brand-red);
+    font-weight: 700;
+    font-size: 1.25rem;
+    text-decoration: none;
+}
+
+.result-title a:hover {
+    text-decoration: underline;
+}
+
+.download-btn {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 50px;
+    color: var(--brand-black);
+    font-weight: 600;
+    padding: 8px 20px;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+}
+
+.download-btn:hover {
+    background: var(--brand-black);
+    color: white;
+    border-color: var(--brand-black);
+}
+
+/* Footer */
+footer {
+    background-color: var(--brand-black);
+    color: white;
+    padding: 50px 0;
+}

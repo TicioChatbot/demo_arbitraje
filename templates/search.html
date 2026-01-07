@@ -1,375 +1,326 @@
 <!doctype html>
 <html lang="es">
-  <head>
-    <meta charset="utf-8" />
-    <title>Buscador de laudos arbitrales - Camara de Comercio de Medellin</title>
+
+<head>
+    <meta charset="utf-8">
+    <title>Buscador de Laudos - Cámara de Comercio de Medellín</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <!-- Bootstrap CSS -->
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-    >
-  </head>
-  <body>
-    <div class="container py-4">
-      <h1 class="mb-3">Buscador de laudos arbitrales</h1>
-      <p class="text-muted mb-4">
-        Busca por radicado, partes, tribunal, resumen, etiquetas o palabras clave temáticas.
-      </p>
+    <!-- UIkit CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uikit@3.17.11/dist/css/uikit.min.css" />
 
-      <!-- Barra superior: búsqueda + orden -->
-      <form method="get" class="mb-3" id="search-form">
-        <div class="row g-3 align-items-end">
-          <!-- Palabras clave generales -->
-          <div class="col-md-6">
-            <label for="q" class="form-label">Búsqueda general</label>
-            <input
-              type="text"
-              id="q"
-              name="q"
-              class="form-control"
-              placeholder="Radicado, partes, texto del laudo, etiqueta…"
-              value="{{ q }}"
-            >
-          </div>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
 
-          <!-- Orden -->
-          <div class="col-md-3">
-            <label for="sort" class="form-label">Ordenar por</label>
-            <select
-              class="form-select"
-              id="sort"
-              name="sort"
-            >
-              <option value="fecha_desc" {% if sort == 'fecha_desc' %}selected{% endif %}>
-                Más recientes primero
-              </option>
-              <option value="fecha_asc" {% if sort == 'fecha_asc' %}selected{% endif %}>
-                Más antiguos primero
-              </option>
-              <option value="radicado_asc" {% if sort == 'radicado_asc' %}selected{% endif %}>
-                Radicado (A → Z)
-              </option>
-            </select>
-          </div>
+    <!-- UIkit JS -->
+    <script src="https://cdn.jsdelivr.net/npm/uikit@3.17.11/dist/js/uikit.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/uikit@3.17.11/dist/js/uikit-icons.min.js"></script>
+</head>
 
-          <!-- Botón buscar -->
-          <div class="col-md-3">
-            <button type="submit" class="btn btn-primary w-100">
-              Buscar
-            </button>
-          </div>
-        </div>
+<body>
 
-        <!-- Filtros adicionales: keyword, árbitro, fechas -->
-        <div class="row g-3 align-items-end mt-2">
-          <div class="col-md-3">
-            <label for="keyword" class="form-label">
-              Palabra clave temática
-            </label>
-            <input
-              type="text"
-              id="keyword"
-              name="keyword"
-              class="form-control"
-              placeholder="p.ej., consumo"
-              value="{{ keyword_filter }}"
-            >
-          </div>
-
-          <div class="col-md-3">
-            <label for="arbiter" class="form-label">
-              Árbitro o tribunal
-            </label>
-            <input
-              type="text"
-              id="arbiter"
-              name="arbiter"
-              class="form-control"
-              placeholder="Nombre o apellido"
-              value="{{ arbiter_filter }}"
-            >
-          </div>
-
-          <div class="col-md-3">
-            <label for="date_from" class="form-label">Fecha laudo desde</label>
-            <input
-              type="date"
-              id="date_from"
-              name="date_from"
-              class="form-control"
-              value="{{ date_from }}"
-            >
-          </div>
-
-          <div class="col-md-3">
-            <label for="date_to" class="form-label">Fecha laudo hasta</label>
-            <input
-              type="date"
-              id="date_to"
-              name="date_to"
-              class="form-control"
-              value="{{ date_to }}"
-            >
-          </div>
-        </div>
-
-        <!-- Filtros por etiquetas (tarjeta + botón para retraer) -->
-        <div class="mt-3">
-          <div class="card">
-            <div class="card-body">
-              <div class="d-flex justify-content-between align-items-center mb-2">
-                <label class="form-label mb-0">Filtrar por etiquetas</label>
-                <div class="d-flex align-items-center gap-2">
-                  <small class="text-muted d-none d-md-inline">
-                    Selecciona uno o varios temas jurídicos
-                  </small>
-                  <button
-                    class="btn btn-sm btn-outline-secondary"
-                    type="button"
-                    data-bs-toggle="collapse"
-                    data-bs-target="#tag-filters-collapse"
-                    aria-expanded="false"
-                    aria-controls="tag-filters-collapse"
-                  >
-                    Mostrar/ocultar etiquetas
-                  </button>
-                </div>
-              </div>
-
-              <!-- Bloque colapsable de tags (por defecto contraído) -->
-              <div class="collapse" id="tag-filters-collapse">
-                <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-1">
-                  {% for tag in tags %}
-                    {% set tag_label = tag.name.replace('_', ' ') | title %}
-                    <div class="col">
-                      <div class="form-check">
-                        <input
-                          class="form-check-input"
-                          type="checkbox"
-                          name="tag"
-                          id="tag-{{ tag.id }}"
-                          value="{{ tag.id }}"
-                          {% if tag.id in selected_tag_ids %}checked{% endif %}
-                        >
-                        <label class="form-check-label small" for="tag-{{ tag.id }}">
-                          {{ tag_label }}
-                        </label>
-                      </div>
-                    </div>
-                  {% endfor %}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </form>
-
-      <!-- Filtros activos + limpiar -->
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <div class="d-flex flex-wrap align-items-center gap-1">
-          {% if q or selected_tag_ids or keyword_filter or arbiter_filter or date_from or date_to %}
-            <span class="me-1 fw-semibold">Filtros activos:</span>
-          {% endif %}
-
-          {% if q %}
-            <span class="badge rounded-pill text-bg-primary">
-              Búsqueda: “{{ q }}”
-            </span>
-          {% endif %}
-
-          {% if keyword_filter %}
-            <span class="badge rounded-pill text-bg-secondary">
-              Keyword: “{{ keyword_filter }}”
-            </span>
-          {% endif %}
-
-          {% if arbiter_filter %}
-            <span class="badge rounded-pill text-bg-secondary">
-              Árbitro: “{{ arbiter_filter }}”
-            </span>
-          {% endif %}
-
-          {% if date_from %}
-            <span class="badge rounded-pill text-bg-light border">
-              Desde: {{ date_from }}
-            </span>
-          {% endif %}
-
-          {% if date_to %}
-            <span class="badge rounded-pill text-bg-light border">
-              Hasta: {{ date_to }}
-            </span>
-          {% endif %}
-
-          {% for tag in tags %}
-            {% if tag.id in selected_tag_ids %}
-              {% set tag_label = tag.name.replace('_', ' ') | title %}
-              <span class="badge rounded-pill text-bg-secondary">
-                {{ tag_label }}
-              </span>
-            {% endif %}
-          {% endfor %}
-        </div>
-
-        <div>
-          {% if q or selected_tag_ids or keyword_filter or arbiter_filter or date_from or date_to %}
-            <a href="{{ url_for('search') }}" class="btn btn-sm btn-outline-secondary">
-              Limpiar filtros
-            </a>
-          {% endif %}
-        </div>
-      </div>
-
-      <!-- Resumen de resultados -->
-      {% set total = pagination.total if pagination is defined else results|length %}
-      {% if total > 0 and pagination is defined %}
-        {% set start = (pagination.page - 1) * per_page + 1 %}
-        {% set end = (pagination.page - 1) * per_page + results|length %}
-        <p class="text-muted mb-3">
-          Mostrando <strong>{{ start }}–{{ end }}</strong> de <strong>{{ total }}</strong> resultado{{ 's' if total != 1 }}{% if q %} para “{{ q }}”{% endif %}.
-        </p>
-      {% elif total == 0 %}
-        <p class="text-muted mb-3">
-          No se encontraron resultados{% if q %} para “{{ q }}”{% endif %}. Ajusta las palabras clave o los filtros.
-        </p>
-      {% endif %}
-
-      <!-- Lista de resultados -->
-      {% if results %}
-        <ul class="list-group mb-4">
-          {% for case in results %}
-            <li class="list-group-item">
-              <div class="d-flex justify-content-between align-items-start">
-                <div class="me-3">
-                  <!-- Radicado, fecha y árbitro -->
-                  <p class="mb-1 small text-muted">
-                    <strong>Radicado:</strong> {{ case.radicado }}
-                    {% if case.fecha_laudo %}
-                      · <strong>Laudo:</strong>
-                      {{ case.fecha_laudo.strftime('%d/%m/%Y') }}
-                    {% endif %}
-                  </p>
-
-                  {% if case.arbiter %}
-                    <p class="mb-1 small text-muted">
-                      <strong>Tribunal / Árbitro:</strong> {{ case.arbiter }}
-                    </p>
-                  {% endif %}
-
-                  <h3 class="h6 mb-1">{{ case.title }}</h3>
-
-                  <!-- Tags del caso -->
-                  <div class="mb-1 d-flex flex-wrap gap-1 small">
-                    {% for tag in case.tags %}
-                      {% set tag_label = tag.name.replace('_', ' ') | title %}
-                      <span class="badge text-bg-light border">
-                        {{ tag_label }}
-                      </span>
-                    {% endfor %}
-                  </div>
-
-                  <!-- Palabras clave -->
-                  {% if case.keywords %}
-                    <div class="mb-1 d-flex flex-wrap gap-1 small">
-                      {% for kw in case.keywords.split() %}
-                        <span class="badge text-bg-secondary">
-                          {{ kw }}
-                        </span>
-                      {% endfor %}
-                    </div>
-                  {% endif %}
-
-                  <p class="mb-0">
-                    {{ case.content[:260] }}{% if case.content|length > 260 %}…{% endif %}
-                  </p>
-                </div>
-
-                {% if case.doc_filename %}
-                  <div class="text-nowrap">
-                    <a
-                      href="{{ url_for('download_case', case_id=case.id) }}"
-                      class="btn btn-sm btn-outline-secondary"
-                    >
-                      Descargar laudo
+    <!-- Navbar -->
+    <nav class="uk-navbar-container" uk-navbar>
+        <div class="uk-container uk-container-xlarge uk-width-1-1">
+            <div class="uk-navbar" style="min-height: 80px;">
+                <div class="uk-navbar-left">
+                    <a class="uk-navbar-item uk-logo" href="#">
+                        <div class="logo-text">
+                            CÁMARA DE COMERCIO<br>DE MEDELLÍN PARA ANTIOQUIA
+                        </div>
                     </a>
-                  </div>
-                {% endif %}
-              </div>
-            </li>
-          {% endfor %}
-        </ul>
-      {% endif %}
+                </div>
+                <!-- Desktop Menu -->
+                <div class="uk-navbar-right uk-visible@m">
+                    <ul class="uk-navbar-nav">
+                        <li><a href="#">Servicios</a></li>
+                        <li><a href="#">Trámites</a></li>
+                        <li><a href="#">Eventos</a></li>
+                        <li><a href="#">Contacto</a></li>
+                    </ul>
+                    <div class="uk-navbar-item">
+                        <a href="#" class="uk-button uk-button-default uk-button-small"
+                            style="border-radius: 50px; color: #333; border-color: #ccc;">Ingresar</a>
+                    </div>
+                </div>
+                <!-- Mobile Menu Toggle -->
+                <div class="uk-navbar-right uk-hidden@m">
+                    <a class="uk-navbar-toggle" uk-navbar-toggle-icon href="#"></a>
+                </div>
+            </div>
+        </div>
+    </nav>
 
-      <!-- Paginación -->
-      {% if pagination.pages > 1 %}
-        <nav aria-label="Paginación de resultados">
-          <ul class="pagination justify-content-center">
-            <!-- Página anterior -->
-            <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
-              {% if pagination.has_prev %}
-                <a
-                  class="page-link"
-                  href="{{ request.path }}?q={{ q }}&sort={{ sort }}&keyword={{ keyword_filter }}&arbiter={{ arbiter_filter }}&date_from={{ date_from }}&date_to={{ date_to }}{% for id in selected_tag_ids %}&tag={{ id }}{% endfor %}&page={{ pagination.prev_num }}"
-                  aria-label="Anterior"
-                >
-                  &laquo;
-                </a>
-              {% else %}
-                <span class="page-link">&laquo;</span>
-              {% endif %}
-            </li>
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="uk-container">
+            <h1 class="hero-title">Te damos la bienvenida al Buscador de Laudos</h1>
+            <p class="hero-subtitle">Centro de Arbitraje y Conciliación</p>
 
-            <!-- Números de página -->
-            {% for p in range(1, pagination.pages + 1) %}
-              <li class="page-item {% if p == pagination.page %}active{% endif %}">
-                {% if p == pagination.page %}
-                  <span class="page-link">{{ p }}</span>
-                {% else %}
-                  <a
-                    class="page-link"
-                    href="{{ request.path }}?q={{ q }}&sort={{ sort }}&keyword={{ keyword_filter }}&arbiter={{ arbiter_filter }}&date_from={{ date_from }}&date_to={{ date_to }}{% for id in selected_tag_ids %}&tag={{ id }}{% endfor %}&page={{ p }}"
-                  >
-                    {{ p }}
-                  </a>
-                {% endif %}
-              </li>
-            {% endfor %}
+            <form method="get" id="search-form">
 
-            <!-- Página siguiente -->
-            <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
-              {% if pagination.has_next %}
-                <a
-                  class="page-link"
-                  href="{{ request.path }}?q={{ q }}&sort={{ sort }}&keyword={{ keyword_filter }}&arbiter={{ arbiter_filter }}&date_from={{ date_from }}&date_to={{ date_to }}{% for id in selected_tag_ids %}&tag={{ id }}{% endfor %}&page={{ pagination.next_num }}"
-                  aria-label="Siguiente"
-                >
-                  &raquo;
-                </a>
-              {% else %}
-                <span class="page-link">&raquo;</span>
-              {% endif %}
-            </li>
-          </ul>
-        </nav>
-      {% endif %}
+                <!-- Main Search Pill -->
+                <div class="search-container">
+                    <input class="search-input" type="text" name="q" value="{{ q }}"
+                        placeholder="¿Qué laudo estás buscando?">
+                    <button type="submit" class="search-btn" uk-icon="icon: search; ratio: 1.1"></button>
+                </div>
+
+                <!-- Filters Row (CSS Grid for perfect distribution) -->
+                <div class="filters-row">
+                    <div class="filters-grid">
+
+                        <!-- Arbiter -->
+                        <div>
+                            <select class="glass-input" name="arbiter">
+                                <option value="">Filtrar por Árbitro</option>
+                                <option value="{{ arbiter_filter }}" selected hidden>{{ arbiter_filter if arbiter_filter
+                                    else 'Filtrar por Árbitro' }}</option>
+                            </select>
+                        </div>
+
+                        <!-- Date -->
+                        <div>
+                            <input class="glass-input" type="text" onfocus="(this.type='date')"
+                                onblur="(this.type='text')" name="date_from" value="{{ date_from }}"
+                                placeholder="Fecha de Laudo">
+                        </div>
+
+                        <!-- Keyword -->
+                        <div>
+                            <input class="glass-input" type="text" name="keyword" value="{{ keyword_filter }}"
+                                placeholder="Palabra Clave / Tema">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Advanced Filters / Tags (Modal Trigger) -->
+                <div class="uk-margin-medium-top">
+                    <!-- Trigger Button -->
+                    <button type="button" class="filter-dropdown-btn" uk-toggle="target: #tags-modal">
+                        Etiquetas / Temas <span uk-icon="icon: plus-circle; ratio: 0.8"></span>
+                    </button>
+
+                    <!-- Selected Tags Count Badge (Optional, good ux) -->
+                    {% if selected_tag_ids %}
+                    <span class="uk-label uk-label-warning uk-margin-small-left" style="border-radius:50px;">{{
+                        selected_tag_ids|length }} Seleccionadas</span>
+                    {% endif %}
+                </div>
+
+                <!-- TAGS MODAL -->
+                <div id="tags-modal" uk-modal>
+                    <div class="uk-modal-dialog">
+
+                        <div class="uk-modal-header">
+                            <h2 class="uk-modal-title uk-text-uppercase uk-text-bold"
+                                style="font-size:1.2rem; color:#333;">Filtrar por Temas</h2>
+                            <button class="uk-modal-close-default" type="button" uk-close></button>
+                        </div>
+
+                        <div class="uk-modal-body">
+                            <!-- Alpha Navigation -->
+                            <div class="alpha-nav">
+                                <!-- Calculate available letters -->
+                                {% set used_letters = [] %}
+                                {% for tag in tags %}
+                                {% if tag.name %}
+                                {% set letter = tag.name[0] | upper %}
+                                {% if letter not in used_letters %}
+                                {% set _ = used_letters.append(letter) %}
+                                {% endif %}
+                                {% endif %}
+                                {% endfor %}
+
+                                {% for letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ" %}
+                                {% if letter in used_letters %}
+                                <a href="#letter-{{ letter }}">{{ letter }}</a>
+                                {% else %}
+                                <a class="disabled">{{ letter }}</a>
+                                {% endif %}
+                                {% endfor %}
+                            </div>
+
+                            <!-- Scrollable Tags Area -->
+                            <div class="tags-scroll-container">
+                                {% set sorted_tags = tags | sort(attribute='name') %}
+                                {% set current_letter = namespace(value='') %}
+
+                                <div class="uk-grid-small uk-child-width-1-3@s uk-child-width-1-4@m" uk-grid>
+
+                                    {# NOTE: Jinja groupby is tricky for first letter without custom filter.
+                                    Doing manual letter detection loop for robustness #}
+
+                                    {% for tag in sorted_tags %}
+                                    {# Logic to check if letter changed #}
+                                    {% set tag_letter = tag.name[0] | upper %}
+
+                                    {% if tag_letter != current_letter.value %}
+                                    {% set current_letter.value = tag_letter %}
+                                    <div class="uk-width-1-1 tag-group-section" id="letter-{{ tag_letter }}">
+                                        <h3 class="tag-group-title">{{ tag_letter }}</h3>
+                                    </div>
+                                    {% endif %}
+
+                                    <!-- Tag Item -->
+                                    <div>
+                                        <label class="tag-item-label">
+                                            <input type="checkbox" name="tag" value="{{ tag.id }}" {% if tag.id in
+                                                selected_tag_ids %}checked{% endif %}>
+                                            <span>{{ tag.name.replace('_', ' ') | title }}</span>
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="uk-modal-footer uk-text-right">
+                            <!-- We need a separate apply button that submits the main form. 
+                                  HTML5 form attribute allows button outside form to submit it. 
+                                  Check if this modal is INSIDE the form. Yes it is. -->
+                            <button class="uk-button uk-button-default uk-modal-close" type="button">Cancelar</button>
+                            <button class="uk-button uk-button-primary" type="submit"
+                                style="background-color: var(--brand-red); border:none;">Aplicar Filtros</button>
+                        </div>
+
+                    </div>
+                </div>
+
+            </form>
+        </div>
     </div>
 
-    <!-- Bootstrap JS (para collapse) -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Results Section -->
+    <div class="uk-section uk-section-default uk-padding-small">
+        <div class="uk-container uk-container-small">
 
-    <!-- Auto-submit al cambiar el orden -->
-    <script>
-      const sortSelect = document.getElementById('sort');
-      const searchForm = document.getElementById('search-form');
+            <!-- Result Bar -->
+            <div class="uk-flex uk-flex-between uk-flex-middle uk-margin-medium-top uk-margin-bottom"
+                style="border-bottom: 1px solid #f0f0f0; padding-bottom: 15px;">
+                {% set total = pagination.total if pagination is defined else results|length %}
+                <div class="uk-text-meta uk-text-uppercase uk-text-bold" style="font-size: 0.75rem;">
+                    {{ total }} Resultados Encontrados
+                </div>
 
-      if (sortSelect && searchForm) {
-        sortSelect.addEventListener('change', function () {
-          searchForm.submit();
-        });
-      }
-    </script>
-  </body>
+                <div class="sort-select-wrapper">
+                    <span class="sort-label">Ordenar por:</span>
+                    <select class="sort-select"
+                        onchange="document.getElementById('search-form').elements['sort'].value=this.value; document.getElementById('search-form').submit();">
+                        <option value="fecha_desc" {% if sort=='fecha_desc' %}selected{% endif %}>Más recientes</option>
+                        <option value="fecha_asc" {% if sort=='fecha_asc' %}selected{% endif %}>Más antiguos</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Active Filters Indicators -->
+            {% if q or selected_tag_ids or keyword_filter or arbiter_filter %}
+            <div class="uk-margin-bottom uk-flex uk-flex-wrap" style="gap: 10px;">
+                {% if q %}
+                <span class="uk-label uk-label-warning">Búsqueda: {{ q }}</span>
+                {% endif %}
+                <!-- This confirms filters are active visually -->
+            </div>
+            {% endif %}
+
+            <!-- Results -->
+            {% if results %}
+            {% for case in results %}
+            <div class="result-card">
+                <div uk-grid>
+                    <div class="uk-width-expand">
+                        <h3 class="result-title">
+                            {% if case.doc_filename %}
+                            <a href="{{ url_for('download_case', case_id=case.id) }}" title="Descargar PDF">{{
+                                case.title }}</a>
+                            {% else %}
+                            <a href="#">{{ case.title }}</a>
+                            {% endif %}
+                        </h3>
+
+                        <div class="uk-text-meta uk-margin-small-bottom">
+                            <span class="uk-margin-right"><span uk-icon="icon: file-text; ratio: 0.8"></span> {{
+                                case.radicado }}</span>
+                            {% if case.fecha_laudo %}
+                            <span class="uk-margin-right"><span uk-icon="icon: calendar; ratio: 0.8"></span> {{
+                                case.fecha_laudo.strftime('%d/%m/%Y') }}</span>
+                            {% endif %}
+                            {% if case.arbiter %}
+                            <span><span uk-icon="icon: user; ratio: 0.8"></span> {{ case.arbiter }}</span>
+                            {% endif %}
+                        </div>
+
+                        <p class="uk-margin-small-top uk-text-secondary"
+                            style="font-size: 0.95rem; line-height: 1.6; color:#444;">
+                            {{ case.content[:280] }}{% if case.content|length > 280 %}...{% endif %}
+                        </p>
+
+                        <div class="uk-margin-small-top">
+                            {% for tag in case.tags %}
+                            <span class="uk-label uk-label-default"
+                                style="background:#f5f5f5; color:#555; font-size:0.75rem;">{{ tag.name.replace('_', ' ')
+                                | title }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="uk-width-auto@s uk-flex uk-flex-middle">
+                        {% if case.doc_filename %}
+                        <a href="{{ url_for('download_case', case_id=case.id) }}" class="download-btn">
+                            <span uk-icon="download"></span> Descargar PDF
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="uk-padding-large uk-text-center uk-text-muted">
+                <span uk-icon="icon: search; ratio: 2"></span>
+                <p class="uk-text-large">No se encontraron resultados con los filtros actuales.</p>
+            </div>
+            {% endif %}
+
+            <!-- Pagination -->
+            {% if pagination.pages > 1 %}
+            <ul class="uk-pagination uk-flex-center uk-margin-large-top">
+                {% if pagination.has_prev %}
+                <li><a
+                        href="{{ request.path }}?q={{ q }}&sort={{ sort }}&keyword={{ keyword_filter }}&arbiter={{ arbiter_filter }}&date_from={{ date_from }}&page={{ pagination.prev_num }}"><span
+                            uk-pagination-previous></span></a></li>
+                {% endif %}
+
+                {% for p in range(1, pagination.pages + 1) %}
+                <li class="{% if p == pagination.page %}uk-active{% endif %}">
+                    <a
+                        href="{{ request.path }}?q={{ q }}&sort={{ sort }}&keyword={{ keyword_filter }}&arbiter={{ arbiter_filter }}&date_from={{ date_from }}&page={{ p }}">{{
+                        p }}</a>
+                </li>
+                {% endfor %}
+
+                {% if pagination.has_next %}
+                <li><a
+                        href="{{ request.path }}?q={{ q }}&sort={{ sort }}&keyword={{ keyword_filter }}&arbiter={{ arbiter_filter }}&date_from={{ date_from }}&page={{ pagination.next_num }}"><span
+                            uk-pagination-next></span></a></li>
+                {% endif %}
+            </ul>
+            {% endif %}
+
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="uk-container uk-text-center">
+            <div class="uk-margin-bottom">
+                <h5 style="color:white; text-transform:uppercase; letter-spacing:1px; margin-bottom:5px;">Cámara de
+                    Comercio de Medellín</h5>
+                <p style="font-size:0.85rem; color:#ccc;">Servicios de Arbitraje y Conciliación</p>
+            </div>
+            <p style="font-size:0.8rem; color:#999;">&copy; 2026 Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+</body>
+
 </html>
-
