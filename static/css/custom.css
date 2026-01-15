@@ -77,6 +77,14 @@ h6,
     font-weight: 400;
 }
 
+.hero-logo {
+    max-width: 200px;
+    margin-bottom: 20px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
 /* Search Box (The Big White Pill) */
 .search-container {
     background: white;
