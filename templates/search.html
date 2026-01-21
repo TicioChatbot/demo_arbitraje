@@ -68,45 +68,186 @@
                 </div>
 
                 <!-- Filters Row (CSS Grid for perfect distribution) -->
-                <div class="filters-row">
-                    <div class="filters-grid">
 
-                        <!-- Arbiter -->
-                        <div>
-                            <select class="glass-input" name="arbiter">
-                                <option value="">Filtrar por Árbitro</option>
-                                <option value="{{ arbiter_filter }}" selected hidden>{{ arbiter_filter if arbiter_filter
-                                    else 'Filtrar por Árbitro' }}</option>
-                            </select>
+
+                <!-- Advanced Filters / Tags (Modal Trigger) -->
+                <!-- New Filter Layout: Modals for Industry/Arbiter/Tags -->
+                <div class="uk-margin-medium-top uk-flex uk-flex-wrap uk-flex-center"
+                    style="gap: 10px; align-items: center;">
+
+                    <!-- Industry Filter (Modal Trigger) -->
+                    <button type="button" class="filter-dropdown-btn" uk-toggle="target: #industry-modal">
+                        Industria / Sector
+                        {% if selected_industries %}
+                        <span class="uk-label uk-label-warning" style="border-radius:50px; margin-left:8px;">{{
+                            selected_industries|length }}</span>
+                        {% else %}
+                        <span uk-icon="icon: plus-circle; ratio: 0.8"></span>
+                        {% endif %}
+                    </button>
+
+                    <!-- Arbiter Filter (Modal Trigger) -->
+                    <button type="button" class="filter-dropdown-btn" uk-toggle="target: #arbiter-modal">
+                        Árbitro / Tribunal
+                        {% if selected_arbiters %}
+                        <span class="uk-label uk-label-warning" style="border-radius:50px; margin-left:8px;">{{
+                            selected_arbiters|length }}</span>
+                        {% else %}
+                        <span uk-icon="icon: plus-circle; ratio: 0.8"></span>
+                        {% endif %}
+                    </button>
+
+                    <!-- Tags Filter (Modal Trigger) -->
+                    <button type="button" class="filter-dropdown-btn" uk-toggle="target: #tags-modal">
+                        Etiquetas / Temas
+                        {% if selected_tag_ids %}
+                        <span class="uk-label uk-label-warning" style="border-radius:50px; margin-left:8px;">{{
+                            selected_tag_ids|length }}</span>
+                        {% else %}
+                        <span uk-icon="icon: plus-circle; ratio: 0.8"></span>
+                        {% endif %}
+                    </button>
+
+                    <!-- Date Filter -->
+                    <div style="position: relative;">
+                        <!-- Using filter-dropdown-btn classes on input to match style -->
+                        <input class="filter-dropdown-btn" type="text" onfocus="(this.type='date')"
+                            onblur="(this.type='text')" name="date_from" value="{{ date_from }}"
+                            placeholder="Fecha de Laudo" style="min-width: 150px; text-align: left;">
+                    </div>
+
+                    <!-- Reset Filters Button -->
+                    {% if selected_industries or selected_arbiters or selected_tag_ids or date_from or q %}
+                    <a href="/" class="uk-icon-button uk-button-danger" uk-tooltip="Limpiar Filtros"
+                        style="display: flex; align-items: center; justify-content: center; width: 42px; height: 42px; border: none; background-color: var(--brand-red); color: white;">
+                        <span uk-icon="icon: trash"></span>
+                    </a>
+                    {% endif %}
+
+                </div>
+
+
+                <!-- --- MODALS --- -->
+
+                <!-- INDUSTRY MODAL -->
+                <div id="industry-modal" uk-modal>
+                    <div class="uk-modal-dialog">
+                        <div class="uk-modal-header">
+                            <h2 class="uk-modal-title uk-text-uppercase uk-text-bold"
+                                style="font-size:1.2rem; color:#333;">Filtrar por Industria</h2>
+                            <button class="uk-modal-close-default" type="button" uk-close></button>
                         </div>
+                        <div class="uk-modal-body">
+                            <!-- Alpha Navigation -->
+                            <div class="alpha-nav">
+                                {% set used_letters_ind = [] %}
+                                {% for ind in industries %}
+                                {% set letter = ind[0] | upper %}
+                                {% if letter not in used_letters_ind %}
+                                {% set _ = used_letters_ind.append(letter) %}
+                                {% endif %}
+                                {% endfor %}
 
-                        <!-- Date -->
-                        <div>
-                            <input class="glass-input" type="text" onfocus="(this.type='date')"
-                                onblur="(this.type='text')" name="date_from" value="{{ date_from }}"
-                                placeholder="Fecha de Laudo">
+                                {% for letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ" %}
+                                {% if letter in used_letters_ind %}
+                                <a href="#ind-letter-{{ letter }}">{{ letter }}</a>
+                                {% else %}
+                                <a class="disabled">{{ letter }}</a>
+                                {% endif %}
+                                {% endfor %}
+                            </div>
+
+                            <div class="tags-scroll-container">
+                                {% set current_letter_ind = namespace(value='') %}
+                                <div class="uk-grid-small uk-child-width-1-2@s" uk-grid>
+                                    {% for ind in industries %}
+                                    {# Logic to check if letter changed #}
+                                    {% set ind_letter = ind[0] | upper %}
+                                    {% if ind_letter != current_letter_ind.value %}
+                                    {% set current_letter_ind.value = ind_letter %}
+                                    <div class="uk-width-1-1 tag-group-section" id="ind-letter-{{ ind_letter }}">
+                                        <h3 class="tag-group-title">{{ ind_letter }}</h3>
+                                    </div>
+                                    {% endif %}
+
+                                    <div>
+                                        <label class="tag-item-label">
+                                            <input type="checkbox" name="industry" value="{{ ind }}" form="search-form"
+                                                {% if ind in selected_industries %}checked{% endif %}>
+                                            <span>{{ ind }}</span>
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
                         </div>
-
-                        <!-- Keyword -->
-                        <div>
-                            <input class="glass-input" type="text" name="keyword" value="{{ keyword_filter }}"
-                                placeholder="Palabra Clave / Tema">
+                        <div class="uk-modal-footer uk-text-right">
+                            <button class="uk-button uk-button-default uk-modal-close" type="button">Cancelar</button>
+                            <button class="uk-button uk-button-primary" type="submit" form="search-form"
+                                style="background-color: var(--brand-red); border:none;">Aplicar Filtros</button>
                         </div>
                     </div>
                 </div>
 
-                <!-- Advanced Filters / Tags (Modal Trigger) -->
-                <div class="uk-margin-medium-top">
-                    <!-- Trigger Button -->
-                    <button type="button" class="filter-dropdown-btn" uk-toggle="target: #tags-modal">
-                        Etiquetas / Temas <span uk-icon="icon: plus-circle; ratio: 0.8"></span>
-                    </button>
+                <!-- ARBITER MODAL -->
+                <div id="arbiter-modal" uk-modal>
+                    <div class="uk-modal-dialog">
+                        <div class="uk-modal-header">
+                            <h2 class="uk-modal-title uk-text-uppercase uk-text-bold"
+                                style="font-size:1.2rem; color:#333;">Filtrar por Árbitro</h2>
+                            <button class="uk-modal-close-default" type="button" uk-close></button>
+                        </div>
+                        <div class="uk-modal-body">
+                            <!-- Alpha Navigation -->
+                            <div class="alpha-nav">
+                                {% set used_letters_arb = [] %}
+                                {% for arb in arbiters %}
+                                {% set letter = arb.name[0] | upper %}
+                                {% if letter not in used_letters_arb %}
+                                {% set _ = used_letters_arb.append(letter) %}
+                                {% endif %}
+                                {% endfor %}
 
-                    <!-- Selected Tags Count Badge (Optional, good ux) -->
-                    {% if selected_tag_ids %}
-                    <span class="uk-label uk-label-warning uk-margin-small-left" style="border-radius:50px;">{{
-                        selected_tag_ids|length }} Seleccionadas</span>
-                    {% endif %}
+                                {% for letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ" %}
+                                {% if letter in used_letters_arb %}
+                                <a href="#arb-letter-{{ letter }}">{{ letter }}</a>
+                                {% else %}
+                                <a class="disabled">{{ letter }}</a>
+                                {% endif %}
+                                {% endfor %}
+                            </div>
+
+                            <div class="tags-scroll-container">
+                                {% set current_letter_arb = namespace(value='') %}
+                                <div class="uk-grid-small uk-child-width-1-2@s" uk-grid>
+                                    {% for arb in arbiters %}
+                                    {# Logic to check if letter changed #}
+                                    {% set arb_letter = arb.name[0] | upper %}
+                                    {% if arb_letter != current_letter_arb.value %}
+                                    {% set current_letter_arb.value = arb_letter %}
+                                    <div class="uk-width-1-1 tag-group-section" id="arb-letter-{{ arb_letter }}">
+                                        <h3 class="tag-group-title">{{ arb_letter }}</h3>
+                                    </div>
+                                    {% endif %}
+
+                                    <div>
+                                        <label class="tag-item-label">
+                                            <input type="checkbox" name="arbiter" value="{{ arb.id }}"
+                                                form="search-form" {% if arb.id|string in selected_arbiters %}checked{%
+                                                endif %}>
+                                            <span>{{ arb.name }}</span>
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="uk-modal-footer uk-text-right">
+                            <button class="uk-button uk-button-default uk-modal-close" type="button">Cancelar</button>
+                            <button class="uk-button uk-button-primary" type="submit" form="search-form"
+                                style="background-color: var(--brand-red); border:none;">Aplicar Filtros</button>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- TAGS MODAL -->
@@ -166,8 +307,8 @@
                                     <!-- Tag Item -->
                                     <div>
                                         <label class="tag-item-label">
-                                            <input type="checkbox" name="tag" value="{{ tag.id }}" {% if tag.id in
-                                                selected_tag_ids %}checked{% endif %}>
+                                            <input type="checkbox" name="tag" value="{{ tag.id }}" form="search-form" {%
+                                                if tag.id in selected_tag_ids %}checked{% endif %}>
                                             <span>{{ tag.name.replace('_', ' ') | title }}</span>
                                         </label>
                                     </div>
@@ -181,7 +322,7 @@
                                   HTML5 form attribute allows button outside form to submit it. 
                                   Check if this modal is INSIDE the form. Yes it is. -->
                             <button class="uk-button uk-button-default uk-modal-close" type="button">Cancelar</button>
-                            <button class="uk-button uk-button-primary" type="submit"
+                            <button class="uk-button uk-button-primary" type="submit" form="search-form"
                                 style="background-color: var(--brand-red); border:none;">Aplicar Filtros</button>
                         </div>
 
@@ -215,12 +356,9 @@
             </div>
 
             <!-- Active Filters Indicators -->
-            {% if q or selected_tag_ids or keyword_filter or arbiter_filter %}
+            {% if q %}
             <div class="uk-margin-bottom uk-flex uk-flex-wrap" style="gap: 10px;">
-                {% if q %}
                 <span class="uk-label uk-label-warning">Búsqueda: {{ q }}</span>
-                {% endif %}
-                <!-- This confirms filters are active visually -->
             </div>
             {% endif %}
 

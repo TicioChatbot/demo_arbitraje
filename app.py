@@ -11,6 +11,7 @@ from flask import (
 )
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import or_, func
+from thefuzz import process, fuzz
 
 app = Flask(__name__)
 
@@ -32,6 +33,12 @@ case_tags = db.Table(
     db.Column("tag_id", db.Integer, db.ForeignKey("tag.id"), primary_key=True),
 )
 
+case_arbiters = db.Table(
+    "case_arbiters",
+    db.Column("case_id", db.Integer, db.ForeignKey("case.id"), primary_key=True),
+    db.Column("arbiter_id", db.Integer, db.ForeignKey("arbiter.id"), primary_key=True),
+)
+
 
 class Case(db.Model):
     __tablename__ = "case"
@@ -50,6 +57,9 @@ class Case(db.Model):
 
     # Palabras clave “genéricas” (una o varias, separadas por espacios)
     keywords = db.Column(db.String(255), nullable=True)
+    
+    # Industria / Sector
+    industry = db.Column(db.String(100), nullable=True)
 
     # Nombre de archivo del laudo (relativo a CASE_DOCS_DIR)
     doc_filename = db.Column(db.String(255), nullable=True)
@@ -57,6 +67,13 @@ class Case(db.Model):
     tags = db.relationship(
         "Tag",
         secondary=case_tags,
+        lazy="subquery",
+        backref=db.backref("cases", lazy=True),
+    )
+
+    arbiters = db.relationship(
+        "Arbiter",
+        secondary=case_arbiters,
         lazy="subquery",
         backref=db.backref("cases", lazy=True),
     )
@@ -69,19 +86,27 @@ class Tag(db.Model):
     name = db.Column(db.String(100), unique=True, nullable=False)
 
 
+class Arbiter(db.Model):
+    __tablename__ = "arbiter"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), unique=True, nullable=False)
+
+
 # --- DB init / datos de ejemplo ------------------------------
 
 def init_db():
     """Crear tablas y sembrar datos demo si están vacías."""
     db.create_all()
 
-    # Si ya hay casos, no volvemos a sembrar
-    if Case.query.first():
-        return
+    # Si ya hay casos, verificamos uno a uno para no duplicar (o podríamos borrar todo para dev)
+    # if Case.query.first():
+    #     return
 
     # Datos provenientes de tu JSON (adaptados a Python) + árbitro + keywords demo
     cases_data = [
         {
+            "industry": "Consumo / Servicios",
             "radicado": "2024 A 0052",
             "fecha_laudo": "2025-04-30",
             "title": "Leonel Chica vs. Loyalty World S.A.S.",
@@ -103,6 +128,7 @@ En el plano sustancial, el tribunal estudia si procede declarar la nulidad relat
             ],
         },
         {
+            "industry": "Construcción",
             "radicado": "2024 A 0036",
             "fecha_laudo": "2025-02-17",
             "title": "Construcciones A Plomo S.A.S. vs. Promotora & Constructora de Proyectos S.A.S.",
@@ -124,6 +150,7 @@ En el plano sustancial, el tribunal estudia la relación contractual de obra civ
             ],
         },
         {
+            "industry": "Inmobiliario",
             "radicado": "2024 A 0020",
             "fecha_laudo": "2025-04-10",
             "title": "INVERBETANCUR S.A.S. vs. Guillermo León Ruiz Tamayo y Altagracia del Socorro Gutiérrez Restrepo",
@@ -145,6 +172,7 @@ En el plano sustancial, el tribunal centra la controversia en el contrato de arr
             ],
         },
         {
+            "industry": "Construcción",
             "radicado": "2024 A 0013",
             "fecha_laudo": "2025-04-09",
             "title": "CONSTRUCTIVAMENTE S.A.S. vs. Arturo García Isaac",
@@ -166,6 +194,7 @@ En el plano sustancial, el tribunal centra la controversia en el contrato de adm
             ],
         },
         {
+            "industry": "Seguros",
             "radicado": "2024 A 0012",
             "fecha_laudo": "2025-04-09",
             "title": "C.I. HERMECO S.A. vs. Allianz Seguros S.A.",
@@ -187,6 +216,7 @@ En el plano sustancial, el tribunal examina el contrato de seguro de infidelidad
             ],
         },
         {
+            "industry": "Inmobiliario",
             "radicado": "2024 A 0006",
             "fecha_laudo": "2025-05-05",
             "title": "INVERSIONES CONSUMAR S.A.S. vs. OPERADORA COLOMBIANA DE CINES S.A.S.",
@@ -208,6 +238,7 @@ En el plano sustancial, el tribunal centra el debate en la existencia, vigencia 
             ],
         },
         {
+            "industry": "Inmobiliario",
             "radicado": "2022 A 0048",
             "fecha_laudo": "2025-01-24",
             "title": "LUZ INDELY MEJÍA BERRÍO vs. HÉCTOR GIOVANNY CASTAÑO DÍAZ, JUAN CARLOS BEDOYA VALENCIA y PAULA ANDREA BEDOYA VALENCIA (litisconsorte necesaria)",
@@ -230,6 +261,7 @@ En el plano sustancial, el tribunal concluye que el negocio denominado por las p
             ],
         },
     {
+        "industry": "Societario",
         "radicado": "2022 A 0063",
         "fecha_laudo": "2024-11-28",
         "title": "ORION HOLDINGS S.A.S. vs. Lleras Holdings S.A.S., Bradley H. Hinkelman, Propiedad Raíz Casacol S.A.S. y Camila Caycedo Prieto",
@@ -273,6 +305,7 @@ En el plano sustancial, el tribunal concluye que el negocio denominado por las p
         },
     
     {
+        "industry": "Inmobiliario",
         "radicado": "2023 A 0055",
         "fecha_laudo": "2024-11-27",
         "title": "Alejandro García Ramos vs. Ricardo José Mejía Jaramillo, Christian Felipe Cano Bermúdez, Victoria Andrea Velásquez Negrete y Leidy Johana Gaviria Ocampo",
@@ -323,6 +356,7 @@ En el plano sustancial, el tribunal concluye que el negocio denominado por las p
     },
 
     {
+        "industry": "Infraestructura",
         "radicado": "2023 A 0041",
         "fecha_laudo": "2024-11-05",
         "title": "Juan Carlos Duque Núñez y Unión Temporal Vegachí Iluminado vs. Municipio de Vegachí",
@@ -381,6 +415,7 @@ En el plano sustancial, el tribunal concluye que el negocio denominado por las p
     },
 
     {
+        "industry": "Societario",
         "radicado": "2024 A 0008",
         "fecha_laudo": "2024-10-04",
         "title": "Álvaro de Jesús Vargas Posada vs. Agrominera Porce S.A.S., Raúl de Jesús Ruiz Cuartas, Alonso Piedrahíta Aristizábal, Luis Orlando Corrales Valencia y Jairo Antonio Zea Atehortúa",
@@ -432,6 +467,7 @@ En el plano sustancial, el tribunal concluye que el negocio denominado por las p
     }, 
 
     {
+        "industry": "Entretenimiento",
         "radicado": "2023 A 0018",
         "fecha_laudo": "2024-06-06",
         "title": "BRYAN DAVID CASTRO SOSA vs. KING RECORDS S.A.S.",
@@ -493,6 +529,7 @@ En el plano sustancial, el tribunal concluye que el negocio denominado por las p
     }, 
 
     {
+        "industry": "Construcción",
         "radicado": "2023 A 0012",
         "fecha_laudo": "2024-05-15",
         "title": "GRUPO G8 PROYECTOS S.A.S. vs. JUAN CAMILO LONDOÑO PIEDRAHITA",
@@ -557,6 +594,7 @@ En el plano sustancial, el tribunal concluye que el negocio denominado por las p
     }, 
 
     {
+        "industry": "Construcción",
         "radicado": "2023 A 0012",
         "fecha_laudo": "2024-05-15",
         "title": "GRUPO G8 PROYECTOS S.A.S. vs. JUAN CAMILO LONDOÑO PIEDRAHITA",
@@ -621,6 +659,7 @@ En el plano sustancial, el tribunal concluye que el negocio denominado por las p
     }, 
 
     {
+            "industry": "Construcción",
             "radicado": "2022 A 0062",
             "fecha_laudo": "2024-03-14",
             "title": "Conjunto Residencial Entre Palmas de San Diego P.H. vs. Mantenimiento, Reformas y Construcción de Colombia S.A.S. (Marrecol S.A.S.)",
@@ -672,6 +711,14 @@ En el plano sustancial, el tribunal concluye que el negocio denominado por las p
     ]
 
     for item in cases_data:
+        # Check if case exists: Delete it to ensure fresh example data (fix bad associations)
+        existing_case = Case.query.filter_by(radicado=item["radicado"]).first()
+        if existing_case:
+            db.session.delete(existing_case)
+            # We don't commit here, we commit at the end, but delete needs to be flushed? 
+            # SQLAlchemy handles this in session.
+
+
         fecha_laudo = datetime.strptime(item["fecha_laudo"], "%Y-%m-%d").date()
 
         tag_objects = []
@@ -682,15 +729,45 @@ En el plano sustancial, el tribunal concluye que el negocio denominado por las p
                 db.session.add(tag)
             tag_objects.append(tag)
 
+        # ARBITERS (Parsing) - Dedented to be outside tag loop
+        # Formatos esperados:
+        # "Árbitro único: Nombre Apellido"
+        # "Tribunal: Nombre1, Nombre2, Nombre3"
+        arb_str = item.get("arbiter", "")
+        arb_names = []
+        if arb_str.startswith("Árbitro único:"):
+            raw_name = arb_str.replace("Árbitro único:", "").strip()
+            if raw_name:
+                arb_names.append(raw_name)
+        elif arb_str.startswith("Tribunal:"):
+            raw_part = arb_str.replace("Tribunal:", "").strip()
+            # Split por coma
+            parts = [p.strip() for p in raw_part.split(",") if p.strip()]
+            arb_names.extend(parts)
+        else:
+            # Fallback por si no tiene prefijo, usar todo el string o nada
+            if arb_str:
+                arb_names.append(arb_str.strip())
+        
+        arbiter_objects = []
+        for a_name in arb_names:
+            a_obj = Arbiter.query.filter_by(name=a_name).first()
+            if not a_obj:
+                a_obj = Arbiter(name=a_name)
+                db.session.add(a_obj)
+            arbiter_objects.append(a_obj)
+
         case = Case(
             radicado=item["radicado"],
             fecha_laudo=fecha_laudo,
             title=item["title"],
             content=item["content"],
             doc_filename=item["path"],
-            arbiter=item.get("arbiter"),
+            arbiter=item.get("arbiter"),  # Guardamos el string original para display simple
             keywords=item.get("keywords"),
+            industry=item.get("industry"),
             tags=tag_objects,
+            arbiters=arbiter_objects,
         )
         db.session.add(case)
 
@@ -708,8 +785,10 @@ def search():
     per_page = 5
 
     # Nuevos filtros
-    keyword_filter = (request.args.get("keyword") or "").strip()
-    arbiter_filter = (request.args.get("arbiter") or "").strip()
+    # Nuevos filtros
+    # keyword_filter = (request.args.get("keyword") or "").strip() # Removed
+    arbiter_filters = request.args.getlist("arbiter") 
+    industry_filters = request.args.getlist("industry")
     date_from_str = (request.args.get("date_from") or "").strip()
     date_to_str = (request.args.get("date_to") or "").strip()
 
@@ -726,39 +805,78 @@ def search():
     query = Case.query
 
     # ---------- BÚSQUEDA GENERAL (q) - CASE INSENSITIVE ----------
+    # ---------- BÚSQUEDA HÍBRIDA (EXACTA + FUZZY) ----------
     if q:
         q_norm = q.lower()
-        pattern = f"%{q_norm}%"
-        query = (
-            query.outerjoin(Case.tags)
-            .filter(
+        search_pattern = f"%{q_norm}%"
+        
+        # 1. Búsqueda Exacta (SQL LIKE) - Base
+        # Buscamos coincidencias directas en DB
+        exact_query = Case.query.outerjoin(Case.tags).filter(
                 or_(
-                    func.lower(Case.title).like(pattern),
-                    func.lower(Case.content).like(pattern),
-                    func.lower(Case.radicado).like(pattern),
-                    func.lower(Case.arbiter).like(pattern),
-                    func.lower(Case.keywords).like(pattern),
-                    func.lower(Tag.name).like(pattern),
+                    func.lower(Case.title).like(search_pattern),
+                    func.lower(Case.content).like(search_pattern),
+                    func.lower(Case.radicado).like(search_pattern),
+                    func.lower(Case.arbiter).like(search_pattern),
+                    func.lower(Case.keywords).like(search_pattern),
+                    func.lower(Case.industry).like(search_pattern),
+                    func.lower(Tag.name).like(search_pattern),
                 )
             )
-            .distinct()
-        )
+        exact_ids = {c.id for c in exact_query.with_entities(Case.id).all()} # Set for unique IDs
+
+        # 2. Búsqueda Fuzzy (TheFuzz)
+        # Obtenemos candidatos para comparar (Title + Keywords + Industry)
+        # Traemos todos los IDs y texto relevante. Optimizamos trayendo solo columnas necesarias.
+        # Nota: Si la DB es muy grande, esto debería limitarse o cachearse. Para demo está bien.
+        all_candidates = Case.query.with_entities(Case.id, Case.title, Case.keywords, Case.industry).all()
+        
+        choices = {}
+        for c in all_candidates:
+            # Construimos un string representativo
+            # Peso mayor al título y keywords
+            text_repr = f"{c.title} {c.keywords or ''} {c.industry or ''}"
+            choices[c.id] = text_repr
+            
+        # process.extract devuelve lista de (string_match, score, key)
+        # Usamos WRatio que es más robusto para typos y parciales
+        fuzzy_results = process.extract(q, choices, limit=20, scorer=fuzz.WRatio)
+        
+        # Filtramos por score > 50 (ajustable)
+        fuzzy_ids = {res[2] for res in fuzzy_results if res[1] >= 50}
+        
+        # 3. Combinar Resultados
+        combined_ids = exact_ids.union(fuzzy_ids)
+        
+        # Si no hay matches, forzamos resultado vacío (o dejamos vacío si combined_ids es empty)
+        if not combined_ids:
+            # Truco para devolver query vacía
+            query = query.filter(Case.id == -1)
+        else:
+            query = query.filter(Case.id.in_(combined_ids))
+
 
     # Filtro por tags (facetas)
     if selected_tag_ids:
         query = query.filter(Case.tags.any(Tag.id.in_(selected_tag_ids)))
 
-    # ---------- FILTRO POR PALABRA CLAVE TEMÁTICA ----------
-    if keyword_filter:
-        kw_norm = keyword_filter.lower()
-        kw_pattern = f"%{kw_norm}%"
-        query = query.filter(func.lower(Case.keywords).like(kw_pattern))
+    # ---------- FILTRO POR ÁRBITRO / TRIBUNAL (Multi-select) ----------
+    # ---------- FILTRO POR ÁRBITRO / TRIBUNAL (Multi-select) ----------
+    if arbiter_filters:
+        # arbiter_filters tiene IDs (e.g. ['3', '5'])
+        arb_ids = []
+        for x in arbiter_filters:
+            try:
+                arb_ids.append(int(x))
+            except:
+                pass
+        
+        if arb_ids:
+            query = query.filter(Case.arbiters.any(Arbiter.id.in_(arb_ids)))
 
-    # ---------- FILTRO POR ÁRBITRO / TRIBUNAL ----------
-    if arbiter_filter:
-        arb_norm = arbiter_filter.lower()
-        arb_pattern = f"%{arb_norm}%"
-        query = query.filter(func.lower(Case.arbiter).like(arb_pattern))
+    # ---------- FILTRO POR INDUSTRIA (Multi-select) ----------
+    if industry_filters:
+        query = query.filter(Case.industry.in_(industry_filters))
 
     # ---------- FILTRO POR RANGO DE FECHAS ----------
     date_from = None
@@ -796,19 +914,30 @@ def search():
     )
     results = pagination.items
 
+    industries_q = [i[0] for i in db.session.query(Case.industry).distinct().all() if i[0]]
+    industries = sorted(industries_q)
+    
+    # Arbiters with IDs
+    arbiters = Arbiter.query.order_by(Arbiter.name).all()
+
     return render_template(
         "search.html",
         tags=all_tags,
+        industries=industries, 
+        arbiters=arbiters,
         results=results,
         q=q,
         selected_tag_ids=selected_tag_ids,
+        selected_industries=industry_filters,
+        selected_arbiters=arbiter_filters,
         sort=sort,
         pagination=pagination,
         per_page=per_page,
-        keyword_filter=keyword_filter,
-        arbiter_filter=arbiter_filter,
+        # keyword_filter=keyword_filter, # Removed
+        arbiter_filter="", # Deprecated single value
         date_from=date_from_str,
         date_to=date_to_str,
+        industry_filter="", # Deprecated single value
     )
 
 
